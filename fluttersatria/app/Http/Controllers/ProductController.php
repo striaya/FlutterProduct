@@ -30,21 +30,22 @@ class ProductController extends Controller
     {
         $request->validate([
             'nama' => 'required',
-            'harga' => 'required',
-            'stok' => 'required',
+            'harga' => 'required|numeric',
+            'stok' => 'required|numeric',
             'deskripsi' => 'required',
             'gambar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048'
         ]);
 
-        $gambar="";
-        if($request->hasFile("gambar")) {
-            $gambar=time().".".
-            $request->gambar->extension();
-            $request->gambar->storeAs(
-                "products",
-                $gambar,
-                "public"
-            );
+        $gambar = null;
+
+        if ($request->hasFile('gambar')) {
+            $file = $request->file('gambar');
+
+            // Buat nama file unik
+            $gambar = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+
+            // Simpan ke storage/app/public/products
+            $file->storeAs('products', $gambar, 'public');
         }
 
         $product = Product::create([
@@ -52,13 +53,15 @@ class ProductController extends Controller
             'harga' => $request->harga,
             'stok' => $request->stok,
             'deskripsi' => $request->deskripsi,
-            'gambar' => $gambar
+            'gambar' => $gambar,
         ]);
+
         return response()->json([
-            'message' => 'data berhasil ditambahkan',
+            'message' => 'Data berhasil ditambahkan',
             'data' => $product
         ], 201);
     }
+
 
     /**
      * Display the specified resource.
@@ -66,7 +69,7 @@ class ProductController extends Controller
     public function show(String $id)
     {
         $product = Product::find($id);
-        if(!$product) {
+        if (!$product) {
             return response()->json([
                 'message' => 'data tidak ditemukan'
             ], 404);
@@ -88,28 +91,28 @@ class ProductController extends Controller
     public function update(Request $request, String $id)
     {
         $product = Product::find($id);
-        if(!$product) {
+        if (!$product) {
             return response()->json([
                 'message' => 'data tidak ditemukan'
             ], 404);
         }
 
-        $product->nama=$request->nama;
-        $product->harga=$request->harga;
-        $product->stok=$request->stok;
-        $product->deskripsi=$request->deskripsi;
+        $product->nama = $request->nama;
+        $product->harga = $request->harga;
+        $product->stok = $request->stok;
+        $product->deskripsi = $request->deskripsi;
 
         //  $gambar="";
 
-        if($request->hasFile("gambar")) {
-            $gambar=time().".".
-            $request->gambar->extension();
+        if ($request->hasFile("gambar")) {
+            $gambar = time() . "." .
+                $request->gambar->extension();
             $request->gambar->storeAs(
                 "products",
                 $gambar,
                 "public"
             );
-            $product->gambar=$gambar;
+            $product->gambar = $gambar;
         }
         $product->save();
 
@@ -124,8 +127,8 @@ class ProductController extends Controller
      */
     public function destroy(String $id)
     {
-        $product = Product::where('id',$id);
-        if(!$product) {
+        $product = Product::where('id', $id);
+        if (!$product) {
             return response()->json([
                 'message' => 'data tidak ditemukan'
             ], 404);
